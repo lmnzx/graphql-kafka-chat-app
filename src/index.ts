@@ -1,25 +1,23 @@
+import "reflect-metadata";
 import express from "express";
-import { ApolloServer, gql } from "apollo-server-express";
+import { ApolloServer } from "apollo-server-express";
+import { buildSchema } from "type-graphql";
+import { HelloResolver } from "./resolver/hello";
 
-// GraphQL Schema
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`;
+const main = async () => {
+  const server = new ApolloServer({
+    schema: await buildSchema({
+      resolvers: [HelloResolver],
+      validate: false,
+    }),
+  });
 
-// Resolver Functions
-const resolvers = {
-  Query: {
-    hello: () => "Hello world!",
-  },
+  const app = express();
+  server.applyMiddleware({ app });
+
+  app.listen({ port: 4000 }, () =>
+    console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
+  );
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
-
-const app = express();
-server.applyMiddleware({ app });
-
-app.listen({ port: 4000 }, () =>
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
-);
+main().catch((err) => console.error(err));
